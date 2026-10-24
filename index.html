@@ -1,0 +1,1117 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Régions Naturelles de l'Alberta</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4;
+        }
+        h1, h2, h3, .font-fredoka {
+            font-family: 'Fredoka', cursive;
+        }
+        
+        /* Map hover and active region styling */
+        .region-path {
+            transition: all 0.25s ease;
+            cursor: pointer;
+            stroke: #1e293b;
+            stroke-width: 1.5;
+            stroke-linejoin: round;
+        }
+        .region-path:hover {
+            filter: brightness(1.15) drop-shadow(0 0 6px rgba(0,0,0,0.3));
+            stroke-width: 2.5;
+            stroke: #ffffff;
+        }
+        .region-path.active-region {
+            filter: brightness(1.2) drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+            stroke: #2563eb;
+            stroke-width: 3;
+        }
+
+        /* City marker styling */
+        .city-marker {
+            transition: transform 0.2s;
+        }
+        .city-marker:hover {
+            transform: scale(1.3);
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Card flip effect for association game */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800 bg-slate-50 selection:bg-amber-200 selection:text-amber-900">
+
+    <!-- Header Navigation -->
+    <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-400 text-emerald-900 p-2.5 rounded-2xl shadow-inner font-bold text-xl flex items-center justify-center w-12 h-12">
+                    <i class="fa-solid fa-mountain-sun text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-wide">Les Régions Naturelles de l'Alberta</h1>
+                    <p class="text-xs text-emerald-100">Exploration interactive - 3<sup>e</sup> année</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap gap-1 sm:gap-2 bg-emerald-800/60 p-1.5 rounded-xl border border-emerald-600/40 text-xs sm:text-sm font-medium">
+                <button onclick="switchTab('explorer')" id="tab-btn-explorer" class="tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white text-emerald-800 shadow-sm font-bold">
+                    <i class="fa-solid fa-map"></i> <span>Explorateur</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-emerald-100 hover:bg-emerald-700">
+                    <i class="fa-solid fa-circle-question"></i> <span>Quiz Express</span>
+                </button>
+                <button onclick="switchTab('matching')" id="tab-btn-matching" class="tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-emerald-100 hover:bg-emerald-700">
+                    <i class="fa-solid fa-puzzle-piece"></i> <span>Association</span>
+                </button>
+                <button onclick="switchTab('wordle')" id="tab-btn-wordle" class="tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-emerald-100 hover:bg-emerald-700">
+                    <i class="fa-solid fa-spell-check"></i> <span>Mots Mystères</span>
+                </button>
+                <button onclick="switchTab('venn')" id="tab-btn-venn" class="tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-emerald-100 hover:bg-emerald-700">
+                    <i class="fa-solid fa-shapes"></i> <span>Comparaison</span>
+                </button>
+            </nav>
+
+            <!-- Sound toggle button -->
+            <button id="sound-toggle" onclick="toggleSound()" class="p-2 bg-emerald-800 hover:bg-emerald-600 rounded-lg text-emerald-100 transition-colors" title="Activer/Désactiver les sons">
+                <i class="fa-solid fa-volume-high text-lg" id="sound-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
+
+        <!-- ================= MODE 1: EXPLORATEUR ================= -->
+        <section id="sec-explorer" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Map Side Panel -->
+            <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                    <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Carte de l'Alberta
+                    </h2>
+                    <label class="inline-flex items-center cursor-pointer text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 hover:bg-slate-200 transition-colors">
+                        <input type="checkbox" id="city-toggle" class="sr-only peer" onchange="toggleCities()">
+                        <div class="w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                        <span class="ml-2">Afficher Villes</span>
+                    </label>
+                </div>
+
+                <!-- Realistic SVG Map Container -->
+                <div class="relative w-full max-w-[380px] aspect-[1/1.25] flex justify-center items-center bg-sky-50/50 rounded-xl p-2 border border-slate-100 shadow-inner">
+                    <svg viewBox="0 0 400 500" class="w-full h-full drop-shadow-md select-none" id="alberta-svg">
+                        <!-- Background boundary guide -->
+                        <g id="regions-group">
+                            <!-- 1. Boreal Forest (Forêt boréale) - Dark Green -->
+                            <path id="path-boreal" d="M 100,20 L 320,20 L 320,110 L 300,105 L 305,125 L 290,135 L 295,185 L 325,185 L 325,280 L 290,290 L 270,330 L 250,330 L 230,290 L 225,240 L 190,210 L 160,240 L 160,260 L 130,250 L 115,225 L 120,205 L 105,190 L 140,185 L 155,150 L 130,150 L 105,125 L 120,120 L 100,85 Z" 
+                                  fill="#1b5e20" class="region-path" onclick="selectRegion('boreal')">
+                                <title>Forêt boréale</title>
+                            </path>
+
+                            <!-- 2. Canadian Shield (Bouclier canadien) - Pink/Light Purple -->
+                            <path id="path-shield" d="M 320,20 L 360,20 L 360,115 L 345,115 L 330,130 L 290,135 L 295,125 L 300,105 L 320,110 Z" 
+                                  fill="#ea80fc" class="region-path" onclick="selectRegion('shield')">
+                                <title>Bouclier canadien</title>
+                            </path>
+
+                            <!-- 3. Rocky Mountain (Montagnes Rocheuses) - Dark Purple -->
+                            <path id="path-rockies" d="M 100,240 L 115,240 L 125,255 L 135,275 L 145,285 L 175,340 L 200,380 L 210,425 L 235,465 L 225,480 L 205,480 L 180,430 L 155,395 L 125,350 L 95,285 Z" 
+                                  fill="#7b1fa2" class="region-path" onclick="selectRegion('rockies')">
+                                <title>Montagnes Rocheuses</title>
+                            </path>
+
+                            <!-- 4. Foothills (Contreforts) - Medium Purple/Indigo -->
+                            <path id="path-foothills" d="M 100,200 L 105,190 L 140,185 L 155,150 L 130,150 L 105,125 L 120,120 L 100,85 L 100,240 L 115,240 L 125,255 L 135,275 L 145,285 L 175,340 L 200,380 L 210,425 L 235,465 L 235,480 L 245,480 L 240,435 L 225,410 L 215,365 L 190,325 L 190,285 L 225,240 L 190,210 L 160,240 L 160,260 L 130,250 L 115,225 L 120,205 Z" 
+                                  fill="#5c6bc0" class="region-path" onclick="selectRegion('foothills')">
+                                <title>Contreforts</title>
+                            </path>
+
+                            <!-- 5. Parkland (Prairie-Parc) - Orange -->
+                            <path id="path-parkland" d="M 295,185 L 325,185 L 325,280 L 290,290 L 270,330 L 250,330 L 230,290 L 225,240 L 190,285 L 190,325 L 215,365 L 225,410 L 240,435 L 245,480 L 250,480 L 255,420 L 295,380 L 320,350 L 325,350 L 325,280 L 305,275 L 310,230 L 295,185 Z" 
+                                  fill="#ff9800" class="region-path" onclick="selectRegion('parkland')">
+                                <title>Prairie-Parc</title>
+                            </path>
+
+                            <!-- 6. Grassland (Les Prairies) - Yellow -->
+                            <path id="path-grassland" d="M 245,480 L 250,480 L 255,420 L 295,380 L 320,350 L 325,350 L 350,350 L 350,475 L 245,480 Z" 
+                                  fill="#ffeb3b" class="region-path" onclick="selectRegion('grassland')">
+                                <title>Les Prairies</title>
+                            </path>
+                        </g>
+
+                        <!-- Cities Overlay (Hidden by default) -->
+                        <g id="cities-group" class="opacity-0 transition-opacity duration-300 pointer-events-none">
+                            <!-- Edmonton -->
+                            <g class="city-marker pointer-events-auto" transform="translate(250, 275)">
+                                <circle r="4" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
+                                <text x="7" y="3" font-size="9" font-weight="bold" fill="#0f172a">Edmonton</text>
+                            </g>
+                            <!-- Calgary -->
+                            <g class="city-marker pointer-events-auto" transform="translate(230, 375)">
+                                <circle r="4" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
+                                <text x="7" y="3" font-size="9" font-weight="bold" fill="#0f172a">Calgary</text>
+                            </g>
+                            <!-- Red Deer -->
+                            <g class="city-marker pointer-events-auto" transform="translate(238, 325)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="6" y="3" font-size="8" font-weight="600" fill="#334155">Red Deer</text>
+                            </g>
+                            <!-- Lethbridge -->
+                            <g class="city-marker pointer-events-auto" transform="translate(255, 450)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="6" y="3" font-size="8" font-weight="600" fill="#334155">Lethbridge</text>
+                            </g>
+                            <!-- Banff -->
+                            <g class="city-marker pointer-events-auto" transform="translate(190, 370)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="-28" y="3" font-size="8" font-weight="600" fill="#334155">Banff</text>
+                            </g>
+                            <!-- Jasper -->
+                            <g class="city-marker pointer-events-auto" transform="translate(145, 280)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="-28" y="3" font-size="8" font-weight="600" fill="#334155">Jasper</text>
+                            </g>
+                            <!-- Fort McMurray -->
+                            <g class="city-marker pointer-events-auto" transform="translate(290, 100)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="6" y="3" font-size="8" font-weight="600" fill="#334155">Fort McMurray</text>
+                            </g>
+                            <!-- Peace River -->
+                            <g class="city-marker pointer-events-auto" transform="translate(150, 110)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="6" y="3" font-size="8" font-weight="600" fill="#334155">Peace River</text>
+                            </g>
+                            <!-- Medicine Hat -->
+                            <g class="city-marker pointer-events-auto" transform="translate(315, 435)">
+                                <circle r="3" fill="#1e293b" stroke="#ffffff" stroke-width="1"/>
+                                <text x="-55" y="3" font-size="8" font-weight="600" fill="#334155">Medicine Hat</text>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Interactive Legend -->
+                <div class="w-full mt-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Légende des Régions</p>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs font-semibold">
+                        <button onclick="selectRegion('boreal')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #1b5e20;"></span>
+                            <span class="truncate">1. Forêt boréale</span>
+                        </button>
+                        <button onclick="selectRegion('shield')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #ea80fc;"></span>
+                            <span class="truncate">4. Bouclier canadien</span>
+                        </button>
+                        <button onclick="selectRegion('rockies')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #7b1fa2;"></span>
+                            <span class="truncate">2. Montagnes Rocheuses</span>
+                        </button>
+                        <button onclick="selectRegion('parkland')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #ff9800;"></span>
+                            <span class="truncate">5. Prairie-Parc</span>
+                        </button>
+                        <button onclick="selectRegion('foothills')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #5c6bc0;"></span>
+                            <span class="truncate">3. Contreforts</span>
+                        </button>
+                        <button onclick="selectRegion('grassland')" class="flex items-center gap-2 p-1.5 rounded hover:bg-white transition-colors text-left">
+                            <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background-color: #ffeb3b;"></span>
+                            <span class="truncate">6. Les Prairies</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Info Panel -->
+            <div class="lg:col-span-7 bg-white p-5 rounded-2xl shadow-md border border-slate-200 min-h-[500px] flex flex-col">
+                <!-- Header Card -->
+                <div id="region-header" class="p-4 rounded-xl text-white shadow-sm flex items-center justify-between mb-4 transition-all" style="background-color: #1b5e20;">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-80" id="region-subtitle">Région #1</span>
+                        <h2 class="text-2xl font-bold font-fredoka" id="region-title">Forêt boréale</h2>
+                    </div>
+                    <div id="region-icon" class="text-4xl opacity-90">
+                        <i class="fa-solid fa-tree"></i>
+                    </div>
+                </div>
+
+                <!-- Sub-tabs for Detail Categories -->
+                <div class="flex flex-wrap gap-1 border-b border-slate-200 pb-2 mb-4 text-xs sm:text-sm font-semibold">
+                    <button onclick="switchDetailTab('physique')" id="dtab-physique" class="dtab-btn px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800">
+                        <i class="fa-solid fa-mountain mr-1"></i> Physique
+                    </button>
+                    <button onclick="switchDetailTab('villes')" id="dtab-villes" class="dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i class="fa-solid fa-city mr-1"></i> Villes
+                    </button>
+                    <button onclick="switchDetailTab('animaux')" id="dtab-animaux" class="dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i class="fa-solid fa-paw mr-1"></i> Animaux
+                    </button>
+                    <button onclick="switchDetailTab('ressources')" id="dtab-ressources" class="dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i class="fa-solid fa-wheat-awn mr-1"></i> Ressources
+                    </button>
+                    <button onclick="switchDetailTab('loisirs')" id="dtab-loisirs" class="dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i class="fa-solid fa-campground mr-1"></i> Loisirs
+                    </button>
+                    <button onclick="switchDetailTab('culture')" id="dtab-culture" class="dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i class="fa-solid fa-people-group mr-1"></i> Culture & Langues
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div id="detail-content-area" class="flex-1 text-slate-700 space-y-4">
+                    <!-- Dynamic Javascript Content Injected Here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= MODE 2: QUIZ EXPRESS ================= -->
+        <section id="sec-quiz" class="tab-content hidden max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h2 class="text-xl font-bold text-slate-800 font-fredoka flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-amber-500"></i> Quiz Express des Régions
+                </h2>
+                <div class="bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full text-xs" id="quiz-score-badge">
+                    Score: <span id="quiz-score">0</span> / <span id="quiz-total">0</span>
+                </div>
+            </div>
+
+            <div id="quiz-card-container">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1" id="quiz-question-number">Question 1</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-4" id="quiz-question-text">Passe au quiz...</h3>
+
+                <div class="space-y-2.5" id="quiz-options">
+                    <!-- Option Buttons Injected via JS -->
+                </div>
+
+                <!-- Explanation Box -->
+                <div id="quiz-explanation" class="mt-4 p-3.5 bg-sky-50 border border-sky-200 text-sky-900 text-sm rounded-xl hidden">
+                    <p class="font-bold mb-0.5" id="quiz-expl-title">Explication :</p>
+                    <p id="quiz-expl-text"></p>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                    <button id="quiz-next-btn" onclick="nextQuestion()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition-all shadow-md">
+                        Question Suivante <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= MODE 3: ASSOCIATION RAPIDE ================= -->
+        <section id="sec-matching" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-slate-800 font-fredoka flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-puzzle-piece text-indigo-500"></i> Jeu d'Association Rapide
+                </h2>
+                <p class="text-sm text-slate-500">Associe chaque indice à sa région naturelle correspondante !</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Clues Column -->
+                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                    <h3 class="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-3 flex items-center justify-between">
+                        <span>1. Choisis un indice :</span>
+                        <span id="clues-left-badge" class="bg-indigo-200 text-indigo-900 px-2 py-0.5 rounded-full text-[10px]">6 restants</span>
+                    </h3>
+                    <div id="matching-clues-list" class="space-y-2">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Target Regions Column -->
+                <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3">2. Clique sur la région correspondante :</h3>
+                    <div id="matching-targets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="resetMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-colors">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Recommencer
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= MODE 4: MOTS MYSTÈRES ================= -->
+        <section id="sec-wordle" class="tab-content hidden max-w-xl mx-auto bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="text-center mb-4">
+                <h2 class="text-xl font-bold text-slate-800 font-fredoka flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-spell-check text-purple-500"></i> Mots Mystères de l'Alberta
+                </h2>
+                <p class="text-sm text-slate-500">Devine le mot caché lié aux régions naturelles !</p>
+            </div>
+
+            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 mb-5">
+                <p class="text-xs text-purple-600 font-bold uppercase mb-1">Indice :</p>
+                <p id="wordle-hint" class="text-slate-700 font-medium text-sm sm:text-base">Chargement de l'indice...</p>
+            </div>
+
+            <!-- Letter slots -->
+            <div id="wordle-slots" class="flex justify-center flex-wrap gap-1.5 mb-6">
+                <!-- Injected JS -->
+            </div>
+
+            <!-- Word Input & Quick Helper Keys -->
+            <div class="space-y-4">
+                <form onsubmit="checkWordleGuess(event)" class="flex gap-2">
+                    <input type="text" id="wordle-input" placeholder="Tape ton mot..." class="flex-1 px-4 py-2.5 border-2 border-slate-300 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-purple-500 uppercase tracking-wider">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2.5 rounded-xl transition-colors shadow-md">
+                        Valider
+                    </button>
+                </form>
+
+                <!-- Helper accents for Canadian French typing -->
+                <div class="flex items-center justify-center gap-1.5 text-xs">
+                    <span class="text-slate-400 font-semibold">Lettres utiles :</span>
+                    <button type="button" onclick="insertAccentedChar('É')" class="bg-slate-100 hover:bg-slate-200 font-bold px-2.5 py-1 rounded border border-slate-300">É</button>
+                    <button type="button" onclick="insertAccentedChar('È')" class="bg-slate-100 hover:bg-slate-200 font-bold px-2.5 py-1 rounded border border-slate-300">È</button>
+                    <button type="button" onclick="insertAccentedChar('Ê')" class="bg-slate-100 hover:bg-slate-200 font-bold px-2.5 py-1 rounded border border-slate-300">Ê</button>
+                    <button type="button" onclick="insertAccentedChar('Ç')" class="bg-slate-100 hover:bg-slate-200 font-bold px-2.5 py-1 rounded border border-slate-300">Ç</button>
+                </div>
+            </div>
+
+            <div id="wordle-feedback" class="mt-4 p-3 rounded-xl text-center font-bold text-sm hidden"></div>
+
+            <div class="mt-5 flex justify-between items-center border-t pt-3">
+                <span class="text-xs text-slate-500 font-semibold">Mot <span id="wordle-current-idx">1</span> sur <span id="wordle-total-count">5</span></span>
+                <button onclick="nextWordle()" class="text-xs text-purple-600 hover:text-purple-800 font-bold flex items-center gap-1">
+                    Passer au mot suivant <i class="fa-solid fa-forward"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= MODE 5: COMPARAISON (VENN) ================= -->
+        <section id="sec-venn" class="tab-content hidden max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="text-center mb-5">
+                <h2 class="text-xl font-bold text-slate-800 font-fredoka flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shapes text-rose-500"></i> Défi Comparaison (Diagramme de Venn)
+                </h2>
+                <p class="text-sm text-slate-500">Sélectionne deux régions et classe leurs caractéristiques !</p>
+            </div>
+
+            <!-- Region Selectors -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Région A :</label>
+                    <select id="venn-select-a" onchange="initVennDiagram()" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-700">
+                        <option value="rockies">Montagnes Rocheuses</option>
+                        <option value="grassland">Les Prairies</option>
+                        <option value="boreal" selected>Forêt boréale</option>
+                        <option value="parkland">Prairie-Parc</option>
+                        <option value="foothills">Contreforts</option>
+                        <option value="shield">Bouclier canadien</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Région B :</label>
+                    <select id="venn-select-b" onchange="initVennDiagram()" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-700">
+                        <option value="rockies">Montagnes Rocheuses</option>
+                        <option value="grassland" selected>Les Prairies</option>
+                        <option value="boreal">Forêt boréale</option>
+                        <option value="parkland">Prairie-Parc</option>
+                        <option value="foothills">Contreforts</option>
+                        <option value="shield">Bouclier canadien</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Venn Visual Area -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <!-- Zone Region A -->
+                <div id="zone-a" onclick="dropTrait('A')" class="bg-blue-50/70 border-2 border-dashed border-blue-300 rounded-2xl p-4 min-h-[160px] cursor-pointer hover:bg-blue-100/50 transition-colors">
+                    <h3 class="font-bold text-blue-900 text-sm text-center mb-2 pb-1 border-b border-blue-200" id="venn-title-a">Seulement Région A</h3>
+                    <div id="traits-container-a" class="space-y-1.5"></div>
+                </div>
+
+                <!-- Zone Both -->
+                <div id="zone-both" onclick="dropTrait('BOTH')" class="bg-purple-50/70 border-2 border-dashed border-purple-300 rounded-2xl p-4 min-h-[160px] cursor-pointer hover:bg-purple-100/50 transition-colors">
+                    <h3 class="font-bold text-purple-900 text-sm text-center mb-2 pb-1 border-b border-purple-200">Les Deux Régions</h3>
+                    <div id="traits-container-both" class="space-y-1.5"></div>
+                </div>
+
+                <!-- Zone Region B -->
+                <div id="zone-b" onclick="dropTrait('B')" class="bg-amber-50/70 border-2 border-dashed border-amber-300 rounded-2xl p-4 min-h-[160px] cursor-pointer hover:bg-amber-100/50 transition-colors">
+                    <h3 class="font-bold text-amber-900 text-sm text-center mb-2 pb-1 border-b border-amber-200" id="venn-title-b">Seulement Région B</h3>
+                    <div id="traits-container-b" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <!-- Traits Pool to Sort -->
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Caractéristiques à classer (Clique d'abord sur un élément, puis sur la zone) :</h3>
+                <div id="traits-pool" class="flex flex-wrap gap-2">
+                    <!-- Injected JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 text-xs py-4 text-center border-t border-slate-700 mt-8">
+        <p>© 2026 Études Sociales Alberta - 3<sup>e</sup> Année (Immersion Française). Réalisé pour l'apprentissage interactif.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Sound synth setup (Web Audio API)
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                } else if (type === 'correct') {
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-lg';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-lg opacity-50';
+            }
+        }
+
+        // ================= REGIONS DATA =================
+        const regionsData = {
+            boreal: {
+                id: 'boreal',
+                num: 1,
+                name: "Forêt boréale",
+                subtitle: "La plus grande région naturelle d'Alberta",
+                color: "#1b5e20",
+                icon: "fa-tree",
+                physique: "Recouvre plus de la moitié de la province (au nord). Elle est caractérisée par d'immenses forêts de conifères (épinettes, pins) et de feuillus (peupliers), des lacs, des rivières et des marécages (muskegs).",
+                villes: "Fort McMurray, Peace River, Slave Lake, High Level.",
+                animaux: "L'orignal, l'ours noir, le castor, le loup, le lynx et de nombreux oiseaux migrateurs.",
+                ressources: "Les sables bitumineux (pétrole), le bois d'œuvre (industrie forestière) et le gaz naturel.",
+                loisirs: "La pêche, le camping, le canot, la chasse, la randonnée et l'observation des aurores boréales.",
+                culture: "Habitée depuis des millénaires par les peuples Nehiyaw (Cris), Dene et la Nation Métisse. Langues parlées : cré, denesuline, français, anglais."
+            },
+            rockies: {
+                id: 'rockies',
+                num: 2,
+                name: "Montagnes Rocheuses",
+                subtitle: "Les hauts sommets de l'ouest",
+                color: "#7b1fa2",
+                icon: "fa-mountain",
+                physique: "Chaîne de montagnes spectaculaire située le long de la frontière sud-ouest avec la Colombie-Britannique. Sommets enneigés, glaciers (Glacier Athabasca), vallées profondes et lacs turquoise (Lac Louise).",
+                villes: "Banff, Jasper, Canmore.",
+                animaux: "Le chèvre de montagne, le mouflon d'Amérique, le grizlli, la marmotte et le pica.",
+                ressources: "Le tourisme international, l'eau douce de fonte des glaciers et le charbon (historique).",
+                loisirs: "Le ski alpin, l'escalade, la randonnée pédestre, le kayak et la photographie de nature.",
+                culture: "Territoire traditionnel des nations Stoney Nakoda et Blackfoot (Siksika, Kainai, Piikani). Langues : stoney, anglais, français (centre touristique)."
+            },
+            foothills: {
+                id: 'foothills',
+                num: 3,
+                name: "Contreforts",
+                subtitle: "La zone de transition entre collines et montagnes",
+                color: "#5c6bc0",
+                icon: "fa-hill-rockslide",
+                physique: "Bande de collines ondulantes couverte de forêts situées juste à l'est des Montagnes Rocheuses. Le relief s'élève progressivement vers l'ouest.",
+                villes: "Hinton, Edson, Rocky Mountain House, Grande Prairie (sud).",
+                animaux: "Le cerf de Virginie, le wapiti, le cougar, le grizzly et le tétras.",
+                ressources: "L'industrie du bois, le charbon, le gaz naturel et l'élevage de bétail.",
+                loisirs: "La randonnée à cheval, le VTT, la chasse et le camping en forêt.",
+                culture: "Procédures de traite historiques avec les Européens (postes de traite des fourrures). Nations Métis et Stoney Nakoda."
+            },
+            shield: {
+                id: 'shield',
+                num: 4,
+                name: "Bouclier canadien",
+                subtitle: "La roche ancienne du nord-est",
+                color: "#ea80fc",
+                icon: "fa-gem",
+                physique: "Petite région située au coin extrême nord-est de l'Alberta. Composée de roches granitiques très anciennes (plus de 3 milliards d'années), de nombreux petits lacs et d'une mince couche de sol.",
+                villes: "Fort Chipewyan (la plus ancienne communauté établie d'Alberta).",
+                animaux: "Le lynx du Canada, le cougar, le tétras du Canada et le doré jaune (poisson).",
+                ressources: "Minéraux (uranium, or), ressources halieutiques (pêche).",
+                loisirs: "Pêche en eau douce sauvage, canot d'expédition, observation de la faune sauvage.",
+                culture: "Forte présence des Premières Nations Dene, Cris et de la communauté Métisse."
+            },
+            parkland: {
+                id: 'parkland',
+                num: 5,
+                name: "Prairie-Parc",
+                subtitle: "Le cœur agricole fertile de l'Alberta",
+                color: "#ff9800",
+                icon: "fa-wheat-field",
+                physique: "Région en forme de croissant entre la forêt boréale et les prairies. Un mélange de bosquets de peupliers/trembles, de prairies d'herbes et de sols extrêmement fertiles.",
+                villes: "Edmonton (la capitale), Red Deer, Camrose, Lloydminster.",
+                animaux: "Le cerf de Virginie, le coyot, le lièvre d'Amérique, la pie bavarde et le canard colvert.",
+                ressources: "L'agriculture (blé, canola, orge), l'élevage laitier et le pétrole/gaz.",
+                loisirs: "Les festivals culturels (Edmonton), le vélo de randonnée, les activités lacustres (Sylvan Lake).",
+                culture: "Centre urbain et historique francophone important (quartier français de St-Boniface / Bonnie Doon à Edmonton, communautés métisses)."
+            },
+            grassland: {
+                id: 'grassland',
+                num: 6,
+                name: "Les Prairies",
+                subtitle: "Les grandes plaines ensoleillées du sud",
+                color: "#ffeb3b",
+                icon: "fa-sun",
+                physique: "Grandes plaines ouvertes et plates ou vallonnées au sud de la province. Climat sec et ensoleillé, présence de badlands (terres arides) et de fossiles de dinosaures.",
+                villes: "Calgary, Lethbridge, Medicine Hat, Drumheller.",
+                animaux: "Le bison d'Amérique, l'antilope d'Amérique (pronghorn), le chien de prairie, le serpent à sonnettes et l'aigle royal.",
+                ressources: "L'élevage de bovins (ranchs), la culture céréalière (avec irrigation), l'énergie éolienne et solaire.",
+                loisirs: "Visite des badlands (Royal Tyrrell Museum), le Calgary Stampede, la découverte des fossiles.",
+                culture: "Territoire de la Confédération des Pieds-Noirs (Blackfoot Confederacy : Siksika, Kainai, Piikani). Élevage traditionnel des cow-boys."
+            }
+        };
+
+        // Active state in Explorer
+        let currentRegionKey = 'boreal';
+        let currentDetailTab = 'physique';
+
+        function selectRegion(key) {
+            playSound('click');
+            currentRegionKey = key;
+            const r = regionsData[key];
+
+            // Update SVG map visual highlights
+            document.querySelectorAll('.region-path').forEach(el => el.classList.remove('active-region'));
+            const activePath = document.getElementById(`path-${key}`);
+            if (activePath) activePath.classList.add('active-region');
+
+            // Update Header Card
+            const header = document.getElementById('region-header');
+            header.style.backgroundColor = r.color;
+            document.getElementById('region-subtitle').innerText = `Région #${r.num} • ${r.subtitle}`;
+            document.getElementById('region-title').innerText = r.name;
+            document.getElementById('region-icon').innerHTML = `<i class="fa-solid ${r.icon}"></i>`;
+
+            // Render Detail Tab content
+            renderDetailTabContent();
+        }
+
+        function switchDetailTab(tab) {
+            playSound('click');
+            currentDetailTab = tab;
+
+            // Button styling
+            document.querySelectorAll('.dtab-btn').forEach(btn => {
+                btn.className = 'dtab-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100';
+            });
+            const activeBtn = document.getElementById(`dtab-${tab}`);
+            if (activeBtn) activeBtn.className = 'dtab-btn px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold';
+
+            renderDetailTabContent();
+        }
+
+        function renderDetailTabContent() {
+            const r = regionsData[currentRegionKey];
+            const area = document.getElementById('detail-content-area');
+
+            let content = '';
+            if (currentDetailTab === 'physique') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-mountain text-emerald-600 mr-2"></i>Caractéristiques Physiques & Paysage</h3>
+                    <p class="text-sm leading-relaxed">${r.physique}</p>
+                </div>`;
+            } else if (currentDetailTab === 'villes') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-city text-emerald-600 mr-2"></i>Villes et Communautés</h3>
+                    <p class="text-sm leading-relaxed font-semibold text-emerald-900">${r.villes}</p>
+                </div>`;
+            } else if (currentDetailTab === 'animaux') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-paw text-emerald-600 mr-2"></i>Faune & Animaux Typiques</h3>
+                    <p class="text-sm leading-relaxed">${r.animaux}</p>
+                </div>`;
+            } else if (currentDetailTab === 'ressources') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-wheat-awn text-emerald-600 mr-2"></i>Ressources Naturelles & Économie</h3>
+                    <p class="text-sm leading-relaxed">${r.ressources}</p>
+                </div>`;
+            } else if (currentDetailTab === 'loisirs') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-campground text-emerald-600 mr-2"></i>Activités de Loisirs</h3>
+                    <p class="text-sm leading-relaxed">${r.loisirs}</p>
+                </div>`;
+            } else if (currentDetailTab === 'culture') {
+                content = `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2 text-base"><i class="fa-solid fa-people-group text-emerald-600 mr-2"></i>Cultures & Langues</h3>
+                    <p class="text-sm leading-relaxed">${r.culture}</p>
+                </div>`;
+            }
+
+            area.innerHTML = content;
+        }
+
+        function toggleCities() {
+            playSound('click');
+            const show = document.getElementById('city-toggle').checked;
+            const grp = document.getElementById('cities-group');
+            if (show) {
+                grp.classList.remove('opacity-0');
+                grp.classList.add('opacity-100');
+            } else {
+                grp.classList.remove('opacity-100');
+                grp.classList.add('opacity-0');
+            }
+        }
+
+        function switchTab(tabId) {
+            playSound('click');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-3 py-1.5 rounded-lg transition-all text-emerald-100 hover:bg-emerald-700';
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) activeBtn.className = 'tab-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white text-emerald-800 shadow-sm font-bold';
+
+            if (tabId === 'quiz') initQuiz();
+            if (tabId === 'matching') resetMatchingGame();
+            if (tabId === 'wordle') initWordle();
+            if (tabId === 'venn') initVennDiagram();
+        }
+
+        // ================= MODE 2: QUIZ EXPRESS =================
+        const quizQuestions = [
+            {
+                q: "Quelle est la plus grande région naturelle de l'Alberta en superficie ?",
+                options: ["Les Prairies", "Forêt boréale", "Montagnes Rocheuses", "Bouclier canadien"],
+                correct: 1,
+                expl: "La Forêt boréale couvre plus de 50% de tout le territoire de l'Alberta au nord !"
+            },
+            {
+                q: "Où se trouvent les Badlands et les fossiles de dinosaures ?",
+                options: ["Dans les Contreforts", "Dans le Bouclier canadien", "Dans Les Prairies (Drumheller)", "Dans la Prairie-Parc"],
+                correct: 2,
+                expl: "La région des Prairies abrite les fameux Badlands et le musée Royal Tyrrell à Drumheller."
+            },
+            {
+                q: "Quelle région se caractérise par des roches granitiques anciennes et de nombreux lacs au nord-est ?",
+                options: ["Le Bouclier canadien", "La Prairie-Parc", "Les Montagnes Rocheuses", "Les Contreforts"],
+                correct: 0,
+                expl: "Le Bouclier canadien au nord-est est formé de roches précambriennes vieilles de plus de 3 milliards d'années."
+            },
+            {
+                q: "Quelle ville importante est située dans la région de la Prairie-Parc ?",
+                options: ["Banff", "Fort McMurray", "Edmonton", "Medicine Hat"],
+                correct: 2,
+                expl: "Edmonton, la capitale provincial d'Alberta, est située au cœur de la fertile Prairie-Parc."
+            },
+            {
+                q: "Quel animal est emblématique des Montagnes Rocheuses ?",
+                options: ["Le bison", "Le mouflon d'Amérique", "Le pelican", "Le chien de prairie"],
+                correct: 1,
+                expl: "Le mouflon d'Amérique et la chèvre de montagne sont parfaitement adaptés au relief rocheux."
+            }
+        ];
+
+        let quizIndex = 0;
+        let quizScore = 0;
+
+        function initQuiz() {
+            quizIndex = 0;
+            quizScore = 0;
+            document.getElementById('quiz-score').innerText = quizScore;
+            document.getElementById('quiz-total').innerText = quizQuestions.length;
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const item = quizQuestions[quizIndex];
+            document.getElementById('quiz-question-number').innerText = `Question ${quizIndex + 1} sur ${quizQuestions.length}`;
+            document.getElementById('quiz-question-text').innerText = item.q;
+
+            const optsDiv = document.getElementById('quiz-options');
+            optsDiv.innerHTML = '';
+
+            item.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 font-semibold text-sm transition-all flex items-center justify-between';
+                btn.innerHTML = `<span>${opt}</span> <i class="fa-regular fa-circle text-slate-300"></i>`;
+                btn.onclick = () => handleQuizAnswer(idx, btn);
+                optsDiv.appendChild(btn);
+            });
+
+            document.getElementById('quiz-explanation').classList.add('hidden');
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+        }
+
+        function handleQuizAnswer(selectedIdx, btnElement) {
+            const item = quizQuestions[quizIndex];
+            const allBtns = document.getElementById('quiz-options').children;
+
+            // Disable all buttons
+            for (let b of allBtns) b.onclick = null;
+
+            if (selectedIdx === item.correct) {
+                playSound('correct');
+                quizScore++;
+                document.getElementById('quiz-score').innerText = quizScore;
+                btnElement.className = 'w-full text-left p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-100 text-emerald-900 font-bold text-sm flex items-center justify-between';
+                btnElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600 text-lg';
+            } else {
+                playSound('wrong');
+                btnElement.className = 'w-full text-left p-3.5 rounded-xl border-2 border-rose-500 bg-rose-100 text-rose-900 font-bold text-sm flex items-center justify-between';
+                btnElement.querySelector('i').className = 'fa-solid fa-circle-xmark text-rose-600 text-lg';
+
+                // Highlight correct answer
+                const correctBtn = allBtns[item.correct];
+                correctBtn.className = 'w-full text-left p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-sm flex items-center justify-between';
+            }
+
+            // Show explanation
+            const explDiv = document.getElementById('quiz-explanation');
+            document.getElementById('quiz-expl-text').innerText = item.expl;
+            explDiv.classList.remove('hidden');
+
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            quizIndex++;
+            if (quizIndex < quizQuestions.length) {
+                renderQuizQuestion();
+            } else {
+                // End Quiz
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                document.getElementById('quiz-card-container').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fa-solid fa-trophy text-5xl text-amber-400 mb-3"></i>
+                        <h3 class="text-2xl font-bold font-fredoka text-slate-800">Quiz Terminé !</h3>
+                        <p class="text-lg text-slate-600 mt-2">Ton score final est de <span class="font-bold text-emerald-600">${quizScore} / ${quizQuestions.length}</span></p>
+                        <button onclick="initQuiz()" class="mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all">
+                            Recommencer le Quiz
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ================= MODE 3: ASSOCIATION RAPIDE =================
+        const matchingPairs = [
+            { clue: "Sables bitumineux & vastes forêts de conifères", regionKey: "boreal", name: "Forêt boréale" },
+            { clue: "Sommets enneigés, glaciers & ski à Banff", regionKey: "rockies", name: "Montagnes Rocheuses" },
+            { clue: "Roches granitiques anciennes & lacs au nord-est", regionKey: "shield", name: "Bouclier canadien" },
+            { clue: "Collines de transition & forêts de bois d'œuvre", regionKey: "foothills", name: "Contreforts" },
+            { clue: "Terres agricoles fertiles & bosquets de trembles", regionKey: "parkland", name: "Prairie-Parc" },
+            { clue: "Badlands, fossiles de dinosaures & bisons", regionKey: "grassland", name: "Les Prairies" }
+        ];
+
+        let selectedClueIdx = null;
+        let matchedCount = 0;
+
+        function resetMatchingGame() {
+            selectedClueIdx = null;
+            matchedCount = 0;
+            document.getElementById('clues-left-badge').innerText = `6 restants`;
+
+            const cluesDiv = document.getElementById('matching-clues-list');
+            const targetsDiv = document.getElementById('matching-targets-list');
+
+            cluesDiv.innerHTML = '';
+            targetsDiv.innerHTML = '';
+
+            // Render Clues
+            matchingPairs.forEach((item, idx) => {
+                const b = document.createElement('button');
+                b.id = `clue-btn-${idx}`;
+                b.className = 'w-full text-left p-3 bg-white border border-indigo-200 rounded-xl text-xs sm:text-sm font-semibold hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between';
+                b.innerHTML = `<span><i class="fa-solid fa-lightbulb text-amber-400 mr-2"></i>${item.clue}</span>`;
+                b.onclick = () => selectClue(idx);
+                cluesDiv.appendChild(b);
+            });
+
+            // Render Targets (Shuffled)
+            const shuffled = [...matchingPairs].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const b = document.createElement('button');
+                b.id = `target-btn-${item.regionKey}`;
+                b.className = 'p-3 bg-white border border-emerald-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm text-center flex items-center justify-center gap-1.5';
+                b.innerHTML = `<span class="w-2.5 h-2.5 rounded-full" style="background-color: ${regionsData[item.regionKey].color}"></span> ${item.name}`;
+                b.onclick = () => selectTarget(item.regionKey);
+                targetsDiv.appendChild(b);
+            });
+        }
+
+        function selectClue(idx) {
+            playSound('click');
+            selectedClueIdx = idx;
+
+            // Highlight selected clue
+            matchingPairs.forEach((_, i) => {
+                const el = document.getElementById(`clue-btn-${i}`);
+                if (el && !el.disabled) {
+                    if (i === idx) {
+                        el.className = 'w-full text-left p-3 bg-indigo-100 border-2 border-indigo-500 rounded-xl text-xs sm:text-sm font-bold text-indigo-900 shadow-sm flex items-center justify-between';
+                    } else {
+                        el.className = 'w-full text-left p-3 bg-white border border-indigo-200 rounded-xl text-xs sm:text-sm font-semibold hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between';
+                    }
+                }
+            });
+        }
+
+        function selectTarget(regionKey) {
+            if (selectedClueIdx === null) return;
+
+            const clueObj = matchingPairs[selectedClueIdx];
+
+            if (clueObj.regionKey === regionKey) {
+                // Correct Match
+                playSound('correct');
+                matchedCount++;
+
+                const clueBtn = document.getElementById(`clue-btn-${selectedClueIdx}`);
+                const targetBtn = document.getElementById(`target-btn-${regionKey}`);
+
+                clueBtn.disabled = true;
+                clueBtn.className = 'w-full text-left p-3 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl text-xs sm:text-sm font-bold opacity-60 flex items-center justify-between';
+                clueBtn.innerHTML += ` <i class="fa-solid fa-check text-emerald-600"></i>`;
+
+                targetBtn.disabled = true;
+                targetBtn.className = 'p-3 bg-emerald-200 border border-emerald-400 text-emerald-900 rounded-xl text-xs sm:text-sm font-bold opacity-60 text-center flex items-center justify-center gap-1';
+                targetBtn.innerHTML = `<i class="fa-solid fa-check"></i> ${clueObj.name}`;
+
+                selectedClueIdx = null;
+                document.getElementById('clues-left-badge').innerText = `${6 - matchedCount} restants`;
+
+                if (matchedCount === 6) {
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                }
+            } else {
+                playSound('wrong');
+                const targetBtn = document.getElementById(`target-btn-${regionKey}`);
+                targetBtn.classList.add('animate-bounce');
+                setTimeout(() => targetBtn.classList.remove('animate-bounce'), 500);
+            }
+        }
+
+        // ================= MODE 4: MOTS MYSTÈRES =================
+        const wordleList = [
+            { word: "BOREAL", hint: "Nom de la plus grande forêt au nord de l'Alberta." },
+            { word: "BISON", hint: "Grand mammal emblématique qui vivait en grands troupeaux dans les Prairies." },
+            { word: "ROCHEUSES", hint: "Les majestueuses montagnes de l'ouest d'Alberta." },
+            { word: "EDMONTON", hint: "Capitale régionale située dans la Prairie-Parc." },
+            { word: "DINOSAURE", hint: "Fossile préhistorique célèbre trouvé à Drumheller." }
+        ];
+
+        let wordleIdx = 0;
+
+        function initWordle() {
+            wordleIdx = 0;
+            renderWordle();
+        }
+
+        function renderWordle() {
+            const current = wordleList[wordleIdx];
+            document.getElementById('wordle-hint').innerText = current.hint;
+            document.getElementById('wordle-current-idx').innerText = wordleIdx + 1;
+            document.getElementById('wordle-total-count').innerText = wordleList.length;
+            document.getElementById('wordle-input').value = '';
+            document.getElementById('wordle-feedback').classList.add('hidden');
+
+            const slotsDiv = document.getElementById('wordle-slots');
+            slotsDiv.innerHTML = '';
+
+            for (let i = 0; i < current.word.length; i++) {
+                const box = document.createElement('div');
+                box.className = 'w-10 h-12 sm:w-12 sm:h-14 border-2 border-slate-300 rounded-xl font-bold text-xl sm:text-2xl flex items-center justify-center uppercase bg-slate-50 text-slate-700 shadow-inner';
+                box.innerText = '_';
+                slotsDiv.appendChild(box);
+            }
+        }
+
+        function insertAccentedChar(char) {
+            playSound('click');
+            const input = document.getElementById('wordle-input');
+            input.value += char;
+            input.focus();
+        }
+
+        function checkWordleGuess(e) {
+            e.preventDefault();
+            const input = document.getElementById('wordle-input');
+            const guess = input.value.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const target = wordleList[wordleIdx].word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            const feedback = document.getElementById('wordle-feedback');
+
+            if (guess === target) {
+                playSound('correct');
+                confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+                feedback.className = 'mt-4 p-3 rounded-xl text-center font-bold text-sm bg-emerald-100 text-emerald-800 border border-emerald-300';
+                feedback.innerText = ' Bravo ! Tu as trouvé le mot mystère !';
+                feedback.classList.remove('hidden');
+
+                // Fill slots
+                const slots = document.getElementById('wordle-slots').children;
+                for (let i = 0; i < wordleList[wordleIdx].word.length; i++) {
+                    slots[i].innerText = wordleList[wordleIdx].word[i];
+                    slots[i].className = 'w-10 h-12 sm:w-12 sm:h-14 border-2 border-emerald-500 rounded-xl font-bold text-xl sm:text-2xl flex items-center justify-center uppercase bg-emerald-500 text-white shadow-md';
+                }
+            } else {
+                playSound('wrong');
+                feedback.className = 'mt-4 p-3 rounded-xl text-center font-bold text-sm bg-rose-100 text-rose-800 border border-rose-300';
+                feedback.innerText = 'Ce n\'est pas tout à fait ça. Réessaye !';
+                feedback.classList.remove('hidden');
+            }
+        }
+
+        function nextWordle() {
+            playSound('click');
+            wordleIdx = (wordleIdx + 1) % wordleList.length;
+            renderWordle();
+        }
+
+        // ================= MODE 5: DIAGRAMME DE VENN =================
+        const vennPoolTraits = [
+            { id: 1, text: "Presque entièrement recouverte de forêts", fits: ["boreal", "foothills"] },
+            { id: 2, text: "Présence de grandes montagnes et glaciers", fits: ["rockies"] },
+            { id: 3, text: "Sols agricoles très fertiles pour le blé", fits: ["parkland", "grassland"] },
+            { id: 4, text: "Acheminement d'énergies renouvelables (éolien/solaire)", fits: ["grassland"] },
+            { id: 5, text: "Industrie forestière (bois d'œuvre)", fits: ["boreal", "foothills"] },
+            { id: 6, text: "Habitée par la faune sauvage (ours, loups)", fits: ["boreal", "rockies", "foothills", "shield", "parkland", "grassland"] }
+        ];
+
+        let selectedTraitObj = null;
+
+        function initVennDiagram() {
+            const keyA = document.getElementById('venn-select-a').value;
+            const keyB = document.getElementById('venn-select-b').value;
+
+            document.getElementById('venn-title-a').innerText = `Seulement ${regionsData[keyA].name}`;
+            document.getElementById('venn-title-b').innerText = `Seulement ${regionsData[keyB].name}`;
+
+            document.getElementById('traits-container-a').innerHTML = '';
+            document.getElementById('traits-container-b').innerHTML = '';
+            document.getElementById('traits-container-both').innerHTML = '';
+
+            const poolDiv = document.getElementById('traits-pool');
+            poolDiv.innerHTML = '';
+
+            vennPoolTraits.forEach(trait => {
+                const chip = document.createElement('button');
+                chip.id = `trait-chip-${trait.id}`;
+                chip.className = 'bg-white border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm';
+                chip.innerText = trait.text;
+                chip.onclick = (e) => {
+                    e.stopPropagation();
+                    selectTraitForVenn(trait);
+                };
+                poolDiv.appendChild(chip);
+            });
+
+            selectedTraitObj = null;
+        }
+
+        function selectTraitForVenn(trait) {
+            playSound('click');
+            selectedTraitObj = trait;
+
+            vennPoolTraits.forEach(t => {
+                const el = document.getElementById(`trait-chip-${t.id}`);
+                if (el) {
+                    if (t.id === trait.id) {
+                        el.className = 'bg-emerald-100 border-2 border-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-900 shadow-sm';
+                    } else {
+                        el.className = 'bg-white border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm';
+                    }
+                }
+            });
+        }
+
+        function dropTrait(targetZone) {
+            if (!selectedTraitObj) return;
+
+            playSound('correct');
+            const trait = selectedTraitObj;
+            let targetDiv = null;
+
+            if (targetZone === 'A') targetDiv = document.getElementById('traits-container-a');
+            if (targetZone === 'B') targetDiv = document.getElementById('traits-container-b');
+            if (targetZone === 'BOTH') targetDiv = document.getElementById('traits-container-both');
+
+            const item = document.createElement('div');
+            item.className = 'bg-white p-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 shadow-sm flex items-center justify-between';
+            item.innerHTML = `<span>${trait.text}</span> <i class="fa-solid fa-check text-emerald-500 text-xs"></i>`;
+            targetDiv.appendChild(item);
+
+            // Remove from pool
+            const poolChip = document.getElementById(`trait-chip-${trait.id}`);
+            if (poolChip) poolChip.remove();
+
+            selectedTraitObj = null;
+        }
+
+        // Initialize default view on window load
+        window.onload = function() {
+            selectRegion('boreal');
+        };
+    </script>
+</body>
+</html>
